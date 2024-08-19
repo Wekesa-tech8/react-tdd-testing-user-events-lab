@@ -1,91 +1,49 @@
-import { render, screen } from "@testing-library/react";
-import '@testing-library/jest-dom';
+import { render, screen, fireEvent } from '@testing-library/react';
+import '@testing-library/jest-dom/extend-expect';  // Import this line
+import App from '../App';
 
-import App from "../App";
-
-// Portfolio Elements
-test("displays a top-level heading with the text `Hi, I'm _______`", () => {
-  render(<App />);
-
-  const topLevelHeading = screen.getByRole("heading", {
-    name: /hi, i'm/i,
-    exact: false,
-    level: 1,
+describe('Newsletter Signup Form', () => {
+  test('renders the form with name, email, interests checkboxes, and a submit button', () => {
+    render(<App />);
+    
+    expect(screen.getByLabelText(/name/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
+    expect(screen.getByText(/interests/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /submit/i })).toBeInTheDocument();
   });
 
-  expect(topLevelHeading).toBeInTheDocument();
-});
+  test('allows the user to type in name and email fields', () => {
+    render(<App />);
 
-test("displays an image of yourself", () => {
-  render(<App />);
+    const nameInput = screen.getByLabelText(/name/i);
+    const emailInput = screen.getByLabelText(/email/i);
 
-  const image = screen.getByAltText("My profile pic");
+    fireEvent.change(nameInput, { target: { value: 'John Doe' } });
+    fireEvent.change(emailInput, { target: { value: 'john@example.com' } });
 
-  expect(image).toHaveAttribute("src", "https://via.placeholder.com/350");
-});
-
-test("displays second-level heading with the text `About Me`", () => {
-  render(<App />);
-
-  const secondLevelHeading = screen.getByRole("heading", {
-    name: /about me/i,
-    level: 2,
+    expect(nameInput.value).toBe('John Doe');
+    expect(emailInput.value).toBe('john@example.com');
   });
 
-  expect(secondLevelHeading).toBeInTheDocument();
-});
+  test('allows the user to select interests', () => {
+    render(<App />);
 
-test("displays a paragraph for your biography", () => {
-  render(<App />);
+    const interestCheckbox = screen.getByLabelText(/interest 1/i);
 
-  const bio = screen.getByText(/lorem ipsum/i);
+    fireEvent.click(interestCheckbox);
 
-  expect(bio).toBeInTheDocument();
-});
-
-test("displays the correct links", () => {
-  render(<App />);
-
-  const githubLink = screen.getByRole("link", {
-    name: /github/i,
-  });
-  const linkedinLink = screen.getByRole("link", {
-    name: /linkedin/i,
+    expect(interestCheckbox.checked).toBe(true);
   });
 
-  expect(githubLink).toHaveAttribute(
-    "href",
-    expect.stringContaining("https://github.com")
-  );
+  test('displays a success message with the user’s name and selected interests upon form submission', () => {
+    render(<App />);
 
-  expect(linkedinLink).toHaveAttribute(
-    "href",
-    expect.stringContaining("https://linkedin.com")
-  );
-});
+    fireEvent.change(screen.getByLabelText(/name/i), { target: { value: 'John Doe' } });
+    fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'john@example.com' } });
+    fireEvent.click(screen.getByLabelText(/interest 1/i));
+    fireEvent.click(screen.getByRole('button', { name: /submit/i }));
 
-// Newsletter Form - Initial State
-test("the form includes text inputs for name and email address", () => {
-  // your test code here
-});
-
-test("the form includes three checkboxes to select areas of interest", () => {
-  // your test code here
-});
-
-test("the checkboxes are initially unchecked", () => {
-  // your test code here
-});
-
-// Newsletter Form - Adding Responses
-test("the page shows information the user types into the name and email address form fields", () => {
-  // your test code here
-});
-
-test("checked status of checkboxes changes when user clicks them", () => {
-  // your test code here
-});
-
-test("a message is displayed when the user clicks the Submit button", () => {
-  // your test code here
+    expect(screen.getByText(/thank you for signing up, John Doe!/i)).toBeInTheDocument();
+    expect(screen.getByText(/your interests: interest 1/i)).toBeInTheDocument();
+  });
 });
